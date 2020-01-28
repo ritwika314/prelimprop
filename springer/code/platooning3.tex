@@ -1,0 +1,32 @@
+Platoon
+using Motion 
+    sensors pos psn
+    actuators float xacc
+       
+allread:
+   pos x = Motion.psn
+
+local:
+   float threshold = 8.0
+   float dist 
+   int timer = 0 $$
+   int mode = 0
+
+SetAcc:
+  pre True
+  eff
+     if (pid == $\NMAX$ - 1):
+        timer =timer + 1
+        if (timer == 100):
+           timer = 0.0
+           mode = (mode + 1) mod 2
+           Motion.xacc = 2.0 - mode $*$ 4     
+     else:
+        dist = pos[pid + 1].x - pos[pid].x
+        if (dist >= threshold):
+            Motion.xacc = 1.0
+        else:
+            Motion.xacc = -1.0
+    x[pid] = Motion.psn
+
+

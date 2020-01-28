@@ -1,0 +1,17 @@
+Squareform
+  using Motion:
+   ...
+  allread:
+    pos x$\label{shapeformp}$
+
+  local:
+    List<List<int>> nbrs = ...
+    List<int> corners = ...
+  
+  TargetUpdate:
+    pre True
+    eff if not(pid in corners):
+      Motion.target = mid(x in nbrs)
+      x[pid] = Motion.psn
+
+    

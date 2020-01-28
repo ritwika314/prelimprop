@@ -1,0 +1,379 @@
+\section{\lgname language design}
+\label{sec:language}
+
+In this section, we present the syntax and the semantics of \lgname.
+%
+%\subsection{Synchronous run-time system }
+%
+When a \lgname application is deployed on a fleet of $\NMAX$ robots, each robot runs an instance of the same program. There is a known set of identifiers $\UINS=\{0,1,\dots,\NMAX-1\}$, and each robot is assigned  a unique index $\myuin \in \UINS$.
+% Sayan. This is out of place here.
+%Programmers can use $\NMAX$ and $\myuin$ as constant values in a \lgname program.
+%
+The execution of the \lgname program advances in a synchronous, \emph{round-by-round} fashion, where each round lasts for $\delta$ time,
+and $\delta >0$ is a platform specific execution parameter.
+During this period, the robots compute, move, and
+communicate with each other through distributed shared memory.
+
+
+
+\subsection{Syntax}\label{sec:syntax}
+
+\reffig{partial-syntax} shows the partial grammar of \lgname syntax.
+Each robot program consists of
+\begin{inparaenum}[(a)]
+\item declarations of the interfaces between the program and the sensor/actuator modules,
+\item declarations of shared and local program variables, and
+\item events, consisting of preconditions and effects.
+\end{inparaenum}
+Robot programs (rule \emph{Program}) first can import sensor/actuator modules.
+The module import grammar production specifies the interfaces or ports:
+it contains all input and output ports for actuators (\emph{APorts}) and sensors (\emph{SPorts}) that the program uses.
+%The program can also contain shared and local declarations.
+To summarize, there are following three types of names for reading/writing values:
+\begin{enumerate}[(i)]
+\item \emph{Sensor and actuator ports} are used to read from sensor ports and write to actuator ports of controllers.
+\item \emph{Local program variables} record the state of the program.
+\item \emph{Distributed shared variables} are used for coordination across robots. All shared variables can be read by all participating robots; an
+      \textbf{allwrite} variables can be written by any participating robot; while an
+      \textbf{allread} variables can be written only by a single-writer.
+\end{enumerate}
+
+User can then optionally specify a statement to set the initial values of program variables~(rule~\emph{Init}).
+The main body of the program is a sequence of events (rule~\emph{Event}) which include a Boolean \textbf{pre}condition
+and an \textbf{eff}ect.
+The effect of an event is also a statement~(rule~\emph{Effect}).
+We skip the syntax rules for statements, expressions, data types, and functions due to the page limit.
+A statement~(rule~\emph{Stmt}) in \lgname resembles those in most imperative languages and includes
+conditional statements, function calls, assignments, blocks of statements, atomic statements for mutual exclusion, etc.
+Mutual exclusion is always an essential feature when shared variables are involved.
+\lgname provides a locking mechanism using the keyword \textbf{atomic} to update the shared variable safely.
+The user can also define functions and abstract data types (tuples of the basic data types).
+
+In the syntax presented in \reffig{partial-syntax}, given an nonterminal \textit{NT},
+{\it NT\textsuperscript{?}} means that it is optional in the syntax at that position,
+{\it NT*} refers to zero or more occurrences,
+and {\it NT\textsuperscript{+}} refers to one or more occurrences.
+The expression $(E1\mid E2)$ denotes that one can use either $E1$ or $E2$.
+
+\begin{figure}
+\newcommand{\zeroone}{\textsuperscript{?}\ }
+\newcommand{\zeromore}{*\ }
+\newcommand{\onemore}{\textsuperscript{+}\ }
+\newcommand{\vbar}{{\normalfont\ |\ }}
+\newcommand{\mterm}[1]{{\normalfont \textbf{#1}}}
+\newcommand{\delim}{\mterm{:\ }\xspace}
+
+\begin{mdframed}
+    [innertopmargin=2pt,innerbottommargin=0pt]
+\itshape\small
+\two{0.45}{0.55}{
+\begin{tabular}{lrl}
+    Program   & ::= & Def\zeromore Import\zeromore DeclBlock Init\zeroone Event\onemore \\
+    Def       & ::= & TypeDef \vbar FuncDef                                             \\
+    Import    & ::= & \mterm{using} identifier \delim SPorts APorts                     \\
+    SPorts    & ::= & \mterm{sensors} \delim VarDecl\onemore                            \\
+    APorts    & ::= & \mterm{actuators} \delim VarDecl\onemore                          \\
+              &     &                                                                   \\
+    DeclBlock & ::= & AWDecl\zeroone ARDecl\zeroone LocalDecl\zeroone                   \\
+    AWDecl    & ::= & \mterm{allwrite} \delim VarDecl\onemore                           \\
+    ARDecl    & ::= & \mterm{allread} \delim ARVarDecl\onemore                          \\
+
+\end{tabular}
+}
+{\begin{tabular}{lrl}
+    LocalDecl & ::= & \mterm{local} \delim VarDecl\onemore                              \\
+    VarDecl   & ::= & Type identifier \vbar Type identifier \mterm{=} Val               \\
+    ARVarDecl & ::= & Type identifier \mterm{[ $\NMAX$ ]}                               \\
+              &     &                                                                   \\
+    Init      & ::= & \mterm{init} \delim Stmt                                          \\
+    Event     & ::= & identifier \delim Precond Effect                                  \\
+    Precond   & ::= & \mterm{pre} \delim Expr                                           \\
+    Effect    & ::= & \mterm{eff} \delim Stmt                                           \\
+              &     &                                                                   \\
+    Stmt      & ::= & \mterm{atomic} Stmt \vbar Stmt StmtList \vbar \textellipsis
+\end{tabular}}
+\end{mdframed}
+
+\caption{\small Partial \lgname syntax rules.}\label{fig:partial-syntax}
+\end{figure}
+
+
+\subsection{Configurations}
+\label{sec:configs}
+
+The semantics of a \lgname program execution is based on synchronous rounds divided into \emph{event transitions} and \emph{environment transitions} that update the \emph{system configuration}.
+In each round, each robot performs at most one event.
+The update performed by a single robot executing an event is modeled as an instantaneous transition that updates the program variables;
+however, different events executed by different robots may interleave in an arbitrary order.
+In between the events of successive rounds, $\delta>0$ duration of time elapses, the program variables remain constant while the values held by the sensor and actuator ports may change.
+%This is captured by an {\em environment transition\/}.
+%The \lgname program can only read the sampled values from and write to the ports every $\delta$ time.
+%\sayan{Need to choose the words carefully here. We should discuss. Whether the variables change value continuously or discretely is a modeling question and what we want to analyze.}
+These are modeled as environment transitions that advance time as well as the sensor and actuator ports.
+%
+Thus, each round consists of a burst of (at most \NMAX) event transitions followed by an environment transition. This is a standard model for synchronous distributed systems where the speed of computation is much faster than the speed of communication and physical movement~\cite{lynch1996a,attiyawelch}.
+
+We now describe the system state, or \emph{system configurations} which we use to formalize \lgname semantics.
+
+\paragraph{System configurations.}
+
+A \emph{system configuration} is a tuple $\gconfig = (\lset_{i\in\UINS},{S},\tau,\turn)$, where
+
+\begin{enumerate}[(i)]
+\item $\lset_{i\in\UINS}$ or $\lset$ in short is an indexed set of \emph{robot configurations}--one for each participating robot.
+      $\lconfig{i}$ refers to the configuration of the $i$-th element, i.e., the $i$-th robot in the system.
+\item ${S} : \Var \mapsto \Val$ is the {\em global context\/}, mapping all shared variable names to their values.
+\item $\tau\in \nnreals$ is the {\em global time\/}.
+\item $\turn\in\{\prog,\env\}$ is a binary \emph{bookkeeping} variable determining whether program or environment transitions are being processed.
+\end{enumerate}
+
+Bookkeeping variables are invisible in the language syntax, and only used in the semantics.
+
+
+\paragraph{Robot configurations.}
+
+A \emph{robot configuration} is used to specify the semantics of each robot.
+As a \lgname program is run on a system of robots,
+each participating robot would have its own set of module ports and local variables,
+along with a local copy of each shared variable.
+Given a \lgname program $P$, we can define $\Var$ be the set of variables,
+$\Val$ be the set of values that an expression in \lgname can evaluate to,
+$\Cfield$ be the set of sensor and actuator ports of the controller being used,
+and $\Event$ the set of events in $P$.
+A robot configuration is a tuple $\agnt = ({M},\cp,\turn)$, where
+\vspace{-1mm}
+\begin{enumerate}[(i)]
+\item ${M} : \Var \mapsto \Val$ is its \emph{local context} mapping both local and shared variables to values.
+      Note that this implies $M$ includes a copy of shared variable values.
+\item $\cp : \Cfield \mapsto \Val$ is the mapping of sensor and actuator ports to values.
+\item $\turn \in \{\prog,\env\}$ is a bookkeeping variable indicating whether this robot should be executing a program or environment transition.
+\end{enumerate}
+\vspace{-1mm}
+For readability, we use the dot (``$.$'') notation to access components of a robot configuration $\agnt$.
+For example, $\agnt.M$ means accessing the local context $M$ in the tuple $\agnt$.
+\vspace{-2mm}
+\paragraph{Black-box functions for environment transitions}
+To define the  executable \K semantics of  \lgname applications, we have to provide executable descriptions for the environment transitions. The type of this executable object ($f$) is defined by $\Cfield$, namely,
+$f: [\Cfield \mapsto \Val] \times \nnreals \mapsto [\Cfield \mapsto \Val]$.
+That is, given old sensor and actuator values and a time point, $f$ should return the new values for all sensor and actual ports.
+%
+Depending on whether we have an explicit or a black-box model for $f$,
+the executable semantics will enable different types of analysis as we shall see in \refsect{verification}.
+
+
+\subsection{Semantics}\label{sec:semantics}
+
+%%semantic rule references
+\newcommand{\SVarUpdate}{{\scriptsize\textsc{SvarAssign}}\xspace}
+\newcommand{\LVarUpdate}{{\scriptsize\textsc{LvarAssign}}\xspace}
+\newcommand{\StmtSeqRuleOne}{{\scriptsize\textsc{StmtSeq1}}\xspace}
+\newcommand{\StmtSeqRuleTwo}{{\scriptsize\textsc{StmtSeq2}}\xspace}
+\newcommand{\SelectEventRule}{{\scriptsize\textsc{SelectEvent}}\xspace}
+\newcommand{\SkipEventRule}{{\scriptsize\textsc{SkipEvent}}\xspace}
+\newcommand{\EndEventRule}{{\scriptsize\textsc{EndEvent}}\xspace}
+\newcommand{\EventTransRule}{{\scriptsize\textsc{EventTrans}}\xspace}
+\newcommand{\EndProgTransRule}{{\scriptsize\textsc{EndProgTrans}}\xspace}
+\newcommand{\RobotEnvRule}{{\scriptsize\textsc{RobotEnv}\xspace}}
+\newcommand{\EnvTransRule}{{\scriptsize\textsc{EnvTrans}\xspace}}
+%%transition rules
+\newcommand{\exprule}{\rightarrow_E\xspace}
+\newcommand{\stmtrule}{\rightarrow_\mathit{stmt}\xspace}
+\newcommand{\sysrule}{\rightarrow_\mathit{Env}\xspace}
+\newcommand{\progtrans}{\rightarrow_\mathit{prog}\xspace}
+\newcommand{\envtrans}{\rightarrow_\mathit{env}\xspace}
+%%
+\newcommand{\SelectEvent}{\ensuremath{\mathtt{\oplus}}\xspace}
+\newcommand{\EndEvent}{\ensuremath{\mathtt{\boldsymbol{\cdot}}}\xspace}
+
+\newcommand{\lsetp}{\{\lconfig{i}^\prime\}}
+\newcommand{\lsetpp}{\{\lconfig{i}^{\prime\prime}\}}
+\begin{figure}
+    \centering
+    \begin{minipage}{0.9\linewidth}
+\scriptsize
+            \fbox{
+\begin{mathpar}
+    \mprset{flushleft}
+    \inferrule*[Right=\StmtSeqRuleOne]
+    {\langle{S}, \agnt, St \rangle \stmtrule  \langle{S'}, \agnt', St' \rangle}
+    {\langle{S}, \agnt, St\ StList \rangle \stmtrule  \langle{S'}, \agnt', St'\ StList \rangle }
+
+    \inferrule*[Right=\StmtSeqRuleTwo]
+    {}
+    {\langle{S}, \agnt, \EndEvent\ StList \rangle \stmtrule  \langle{S}, \agnt, StList \rangle }
+\\
+    \inferrule*[leftskip=1cm, Right=\SVarUpdate]
+    {
+        x \in \mathit{Keys}({S}) \wedge x \in \mathit{Keys}(\agnt.{M}) \wedge \agnt^\prime.M = \agnt.M[x\mapsto v]
+    }
+    {\langle{S}, \agnt, x = v \rangle {\rightarrow_{S}}  \langle{S}[x\mapsto v],\agnt^\prime,\cdot\rangle}\label{va1} \\
+    \inferrule*[leftskip=1cm, Right=\LVarUpdate]
+    {
+        x \notin \mathit{Keys}({S}) \wedge x \in \mathit{Keys}(\agnt.{M}) \wedge \agnt^\prime.M = \agnt.M[x\mapsto v]  }
+    {\langle{S},\agnt, x = v \rangle {\rightarrow_{S}}  \langle{S},\agnt^\prime,\cdot\rangle}\label{va2}
+\end{mathpar}}\end{minipage}
+\caption{\small Example statement level semantic rules for \lgname.}\label{fig:assignrules}
+
+\end{figure}
+
+%
+interesting semantic rules of \lgname above the event level. Rule~\LVarUpdate and Rule ~\SVarUpdate showing the semantic rules for local and shared variable assignment respectively are provided as examples of statement level rules. Rule~\StmtSeqRuleOne and \StmtSeqRuleTwo show how a statement representing a sequence of statements is executed.
+
+
+\paragraph{Per robot semantics.}
+
+\begin{figure}
+    \centering
+    \begin{minipage}{0.8\linewidth}
+    \scriptsize
+
+    \fbox{
+\begin{mathpar}
+    \mprset{flushleft}
+    \inferrule*[Right=\SkipEventRule]
+    {}
+    {\langle{S}, \agnt, \SelectEvent \rangle \stmtrule  \langle{S}, \agnt, \EndEvent \rangle }
+
+    \inferrule*[Right=\EndEventRule]
+    {}
+    {\langle{S},({M},\cp,\prog), \EndEvent \rangle \stmtrule  \langle{S},({M},\cp,\env), \EndEvent \rangle }
+\\
+    \inferrule*[leftskip=1cm, Right=\RobotEnvRule]
+    {
+        \forall x \in \mathit{Keys}({S}),M' = {M}[x \mapsto S[x]] \land \cp' = \mathit{f}(\cp,\delta)
+    }
+    {  \langle S, (M, cp, \env) \rangle \envtrans \langle S, (M', cp', \prog) \rangle}
+\end{mathpar}}
+\caption{\small Partial per robot semantic rules for \lgname.}\label{fig:partial-semantics}
+\end{minipage}
+\end{figure}
+
+First, we present the semantics of executing an event for each robot,
+which will help in discussing the semantics of the whole system.
+All rules for statement semantics are of type
+\[
+\stmtrule \subseteq (\pws \times \pwl\times (\pwstmt \cup \{\SelectEvent, \EndEvent\})) \mapsto \wp(\pws\times \pwl \times \pwstmt\cup \{\EndEvent\}),
+\]
+where $\pwstmt$ refers to the set of all possible statements allowed by \lgname syntax.
+This relation takes as input a tuple of (1) a global context, (2) a robot configuration, and (3) a statement,
+and maps it to a set of such tuples.
+
+
+
+The symbols `\SelectEvent' and `\EndEvent' are not in \lgname but internal syntactic structures.
+`\SelectEvent' is to denote nondeterministic selection of events,
+and `\EndEvent' is to indicate an ``empty" statement.
+
+Rule~\SelectEventRule in \reffig{partial-semantics} shows that any event may be executed when the precondition $Cond$ is evaluated to true,
+and by replacing \SelectEvent with the event effect $\mathit{Body}$, it ensures only one event is selected and executed.
+The event effect is then executed following the semantics of each statement in $\mathit{Body}$.
+Rule~\SkipEventRule allows the robot to skip the event completely.
+At the end of the event, the sequence of statements becomes empty~`\EndEvent'.
+Rule~\EndEventRule then makes sure the $\turn$ of the robot is set to $\env$ indicating that
+an environment transition will occur afterwards.
+
+Similarly, we define the semantics of how each robot interacts with environment including other robots.
+The environment transition rule is of type
+\[
+\envtrans \subseteq (\pws \times \pwl) \mapsto \wp(\pws\times \pwl),
+\]
+which takes a global context and a robot configuration as input.
+Rule~\RobotEnvRule simply states that the new local context $M'$ is the
+old local context $M$ updated with the global context $S$;
+thus ensuring that all robots have consistent shared variable values before the next program transition.
+New sensor readings $\cp'$ is then obtained by evaluating the black-box dynamics $f$ with time $\delta$.
+In an actual execution, the controller would run the program on hardware,
+whose sensor ports evolve for $\delta$ time between program transitions.
+This formalization allows the ports to behave arbitrarily over $\delta$-transitions.
+Hence in verification,
+additional assumptions over the behavior of the sensor and actuator ports are needed.
+Finally, the $\turn$ of the robot is set back to $\prog$.
+
+
+\paragraph{System semantics.}
+
+With the event semantic for each robot, we can then define the execution for the distributed \lgname program.
+The rewrite rule is a mapping from an initial system configuration to a set of configurations.
+It has the type
+\[
+\rightarrow_G\ \subseteq \pwg \mapsto \wp(\pwg),
+\]
+where $\pwg$ is the set of all possible system configurations.
+
+Rule~\EventTransRule expresses that starting from a system configuration $\gconfig = (\lset, S, \tau, \prog)$,
+a robot $i$ with the configuration $\lconfig{i}$ starts by selecting an enabled event,
+executes the event via a sequence of $\stmtrule$ rewrites,
+and sets its own $\turn$ to $\env$ at the end of the event execution.
+The system goes from a configuration $\gconfig$ to $\gconfig^{\prime}= (\lsetp, S^{\prime}, \tau, \prog)$,
+with possibly different robot configurations and global context depending on
+whether any statement executed resulted in writes to shared variables.
+The system can display nondeterministic behaviors arising from different robots executing their events in different orders.
+After all robots enter the $\env$ turn, rule~\EndProgTransRule sets the global $\turn$ from $\prog$ to $\env$
+indicating the end of program transition, and an environment transition will occur afterwards.
+
+\begin{figure}
+\scriptsize
+\begin{mdframed}
+[innertopmargin=0pt,innerbottommargin=2pt]
+\begin{mathpar}
+    \mprset{flushleft}
+    \inferrule*[leftskip=1cm, Right=\EventTransRule]
+    {
+        \exists i \in \UINS, \langle S,\lconfig{i}, \SelectEvent \rangle \stmtrule
+        \langle S^{\prime},\lconfig{i}', \EndEvent\rangle \\\\
+        \land\ \lconfig{i}.\turn = \prog \land \lconfig{i}^\prime.\turn = \env
+    }
+    {(\lset, S, \tau, \prog)\rightarrow_G (\lsetp, S^{\prime}, \tau, \prog)}
+    \\
+
+    \inferrule*[leftskip=1cm, Right=\EndProgTransRule]
+    {
+        \forall i \in\UINS, \lconfig{i}.\turn=\env
+    }
+    {(\lset, S, \tau, \prog)\rightarrow_G (\lset, S, \tau, \env)}
+    \\
+
+    \inferrule*[leftskip=1cm, Right=\EnvTransRule]{
+        \forall i \in \UINS, \langle S, \lconfig{i} \rangle \envtrans \langle S, \lconfig{i}^\prime \rangle \\\\
+        \land\ \lconfig{i}.\turn = \env \land \lconfig{i}^\prime.\turn = \prog
+    }
+    { (\lset, {S}, \tau,\env)\rightarrow_G (\lsetp, {S}, \tau + \delta,\prog)}
+\end{mathpar}
+\end{mdframed}
+\caption{\small System semantic rules for \lgname.}\label{fig:partial-semantics-global}
+\end{figure}
+
+
+Rule~\EnvTransRule shows the semantics of the system configuration after rule~\EndProgTransRule.
+This rule synchronizes the environment transitions of each robot and
+ensure that the global time $\tau$ advances to $\tau + \delta$.
+
+
+\subsection{Synchronization and consistency}
+\label{sec:sync}
+
+Following the semantic rules in \refsect{semantics}, notice that all event transitions of \lgname program takes \emph{zero} time.
+The environment transitions however take $\delta$ time for the evolution of the sensor and actuator ports
+together with the update of the local context from the global context.
+In this section, we discuss how this semantic abstracts the behavior of a distributed cyber-physical system,
+and how our tool chain in~\cite{ghosh2019cyphyhouse} provides a faithful implementation of such abstraction.
+
+To reiterate, the following are the timing requirements from rule~\EventTransRule and \EnvTransRule:
+\begin{inparaenum}[(a)]
+\item an event transition takes \emph{zero} time,
+\item new values of controller ports are sampled at the end of each round
+\item \label{consistency} shared variables should reach consistent values within $\delta$ time, and
+\item \label{gclock} a global clock is used to synchronize each $\delta$-time round.
+\end{inparaenum}
+The first two requirements are achievable if the time taken to complete a program transition is negligible compared to $\delta$,
+and $\delta$ can be a common multiple of the sampling intervals of all controller ports in use.
+These constraints are reasonable when computation and communication is comparatively much faster.
+For \Motion module as an example, our position sensor on each device publishes every 0.01 sec~(100Hz) while the CPU on each drone is 1.4 GHz.
+If we set $\delta$ to be 0.01 sec, an event transition taking 10K CPU cycles is still less than 0.1\% of $\delta$.
+
+Requirement~\eqref{consistency} and~\eqref{gclock} are common research questions in distributed computing with an extensive literature.
+A global clock can be achieved with existing techniques that synchronize all local clocks on robots.
+In~\cite{ghosh2019cyphyhouse}, distributed shared memory for shared variables is implemented through message passing.
+We ensure that the time taken to propagate values through messages and reach consistency is smaller than $\delta$,
+and the update is visible in the next round of program transitions for all robots.
+We therefore conclude our round based semantic with shared memory is a reasonable abstraction.

@@ -1,0 +1,391 @@
+\usepackage{amsmath}
+
+% General
+\newcommand{\tb}[1]{\textbf{#1}}
+\newtheorem{invariant}{Invariant}
+\newtheorem{assumption}{Port Assumption}
+\newtheorem{summary}{Function Summary}
+\newtheorem{proofob}{Proof Obligation}
+
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\vs}{{\textbf{s}}}
+
+\newcommand{\w}[1]{\ensuremath{\textit{#1}}}
+\newcommand{\m}[1]{\ensuremath{\texttt{#1}}}
+\newcommand{\s}[1]{\ensuremath{\textsf{#1}}}
+\newcommand{\p}[1]{\ensuremath{\left(#1\right)}}
+\newcommand{\pl}[1]{\ensuremath{\left\langle#1\right\rangle}}
+\newcommand{\OR}{\mbox{ }|\mbox{ }}
+\newcommand{\NMAX}{\texttt{N\_SYS}\xspace}
+\newcommand{\st}{.\mbox{ }}
+\newcommand{\finto}{\ensuremath{\stackrel{\mathtt{fin}}{\longrightarrow}}}
+\newcommand{\defeq}{\ensuremath{\stackrel{\mathtt{def}}{=}}}
+\newcommand{\cond}[1]{\ensuremath{\left\{\begin{array}{ll} #1 \end{array}\right.}}
+\newcommand{\lst}[1]{\begin{itemize} {#1} \end{itemize}}
+\newcommand{\pby}[1]{\hspace*{\fill}{#1}}
+\newcommand{\slide}[2][]{ \begin{frame} \frametitle{#1} {#2} \end{frame} }
+\newcommand{\etal}{\textit{et al.}\xspace}
+\newcommand{\MW}{\sf{allwrite}}
+\newcommand{\SW}{\sf{allread}}
+\newcommand{\lgname}{\emph{Koord}\xspace}
+\newcommand{\toolname}{\emph{CyPhyHouse}\xspace}
+\newcommand{\appname}{\emph{AppName}\xspace}
+\newcommand{\UINS}{\texttt{ID}\xspace}
+\newcommand{\kbmc}{\emph{KoordBMC}}
+\newcommand{\kiic}{\emph{KoordProver}}
+\newcommand{\ksem}{\emph{Koord Semantics}}
+\newcommand{\sympost}{\emph{Symbolic Post Generation}}
+\newcommand{\myuin}{\texttt{pid}\xspace}
+\newcommand{\Var}{\mathit{Var}\xspace}
+\newcommand{\Port}{\mathit{Port}\xspace}
+\newcommand{\Event}{\mathit{Events}}
+
+\newcommand{\Val}{\mathit{Val}\xspace}
+\newcommand{\Cfield}{\mathit{CPorts}\xspace}
+
+\newcommand{\cName}{\mathit{cName}\xspace}
+
+\newcommand{\rect}{\ensuremath{\mathit{rect}}\xspace}
+\newcommand{\dmap}{{\sf DMap}\xspace}
+
+\newcommand{\domain}{\mathit{domain}}
+
+\newcommand{\End}{\mathit{End}\xspace}
+
+\newcommand{\Post}{\mathit{Post}\xspace}
+
+\newcommand{\traj}{\mathit{traj}\xspace}
+\newcommand{\pt}[2]{\mathit{Pt}_{[#1,#2]}}
+\newcommand{\Final}{\mathit{End}_\prog\xspace}
+\newcommand{\ft}{\mathit{End}_\env\xspace}
+\newcommand{\frontier}{\mathit{End}_\mathit{rnd}\xspace}
+%evaluation property semantics
+\newcommand{\eval}{\mathit{eval}}
+\newcommand{\sat}{\rightarrow_\mathit{sat}}
+\newcommand{\Reach}{\mathit{Reach}}
+% For references
+\newcommand{\fig}[1]{Figure~\ref{#1}}
+\newcommand{\lem}[1]{Lemma~\ref{#1}}
+\newcommand{\asum}[1]{Assumption~\ref{#1}}
+\newcommand{\PO}[1]{PO~\eqref{#1}}
+\newcommand{\portasum}{port assumption\xspace}
+\newcommand{\funcasum}{function summary\xspace}
+\newcommand{\inv}[1]{Invariant~\ref{#1}}
+\newcommand{\theo}[1]{Theorem~\ref{#1}}
+\newcommand{\coro}[1]{Corollary~\ref{#1}}
+\newcommand{\defn}[1]{Definition~\ref{#1}}
+\newcommand{\rmrk}[1]{Remark~\ref{#1}}
+\newcommand{\myexample}[1]{Example~\ref{#1}}
+\newcommand{\sect}[1]{$\S$~\ref{#1}}
+\newcommand{\refsect}[1]{Section~\ref{sec:#1}}
+\newcommand{\reffig}[1]{Figure~\ref{fig:#1}}
+\newcommand{\refalg}[1]{Algorithm~\ref{#1}}
+\newcommand{\ev}{\mathit{ev}}
+\definecolor{orange}{rgb}{1,0.5,0}
+\definecolor{darkgreen}{rgb}{0.0, 0.5, 0.0}
+\newcommand{\logicarg}[2]{% \logicarg{<premise>}{<conclusion>}
+  \begin{tabular}[t]{@{}c@{}}
+    #1 \\ \hline #2
+  \end{tabular}%
+}
+\newcommand{\LineForm}{\textsf{LineForm}\xspace}
+
+\newcommand{\sayan}[1]{{#1}}  %{\textcolor{blue}{#1}}
+\newcommand{\rg}[1]{{#1}}     %{\textcolor{red}{#1}}
+\newcommand{\chiao}[1]{{#1}}  %{\textcolor{green}{#1}}
+\newcommand{\two}[4]{
+	\parbox{.98\columnwidth}{\vspace{1pt} \vfill
+		\parbox[t]{#1\columnwidth}{#3}%
+		\hspace{.5cm}
+		\parbox[t]{#2\columnwidth}{#4}%
+	}}
+\newcommand{\three}[5]{
+	\parbox{.98\columnwidth}{\vspace{1pt} \vfill
+		\parbox[t]{#1\columnwidth}{#3}%
+		\hspace{.5cm}
+		\parbox[t]{#2\columnwidth}{#4}%\vfill
+				\hspace{.5cm}
+		\parbox[t]{#2\columnwidth}{#5}%
+	}}
+	
+\lstdefinelanguage{Koord}{
+		%  basicstyle=\figuresize,
+		keywordstyle=\ttfamily, %\figuresize,
+		keywordstyle=\color{blue},
+		identifierstyle=\ttfamily, % \figuresize,
+		emphstyle=\ttfamily, %\tt, % \figuresize,
+        emphstyle=\color{green},
+		mathescape=true,
+		tabsize=20,
+		%  tabsize=4,
+		sensitive=false,
+		columns=fullflexible,
+		keepspaces=true,
+		flexiblecolumns=true,
+		%  basewidth=0.5em,
+		basewidth=0.05em,
+		moredelim=[il][\rm]{//},
+		moredelim=[is][\sf ]{!}{!},
+		moredelim=[is][\bf ]{*}{*},
+		keywords={
+			%         do, 
+                        and , module,
+			agent, sensors, actuators, allread, allwrite, atomic, actuator, assume,
+			else,elseif,end,eff,
+			atomic,for, foreach,forget,
+			input,internal,if,import,in,invariant,
+			local,
+			or,
+			pre,
+			return,
+			sensor,
+			then,def,type,types,thread,to,
+			using,module
+			variables, vocabulary,
+			when,where, with,while},
+		emph={int,pos,Task,boolean,float,update,replaceList,findTask,finishTask,beginTask,doMove, doReach, doReachA, forget, getOdometer, getInput, getMotion, getObs, getPos, getxPos, getPosition, getNeighbors, setMotion, inMotion, sharedsw, sharedmw, tuple, map, array, enumeration},
+		literate=
+		{(}{{$($}}1
+		{)}{{$)$}}1
+		% LaTeX math symbols
+		{\\in}{{$\in\ $}}1
+		{\\preceq}{{$\preceq\ $}}1
+		{\\subset}{{$\subset\ $}}1
+		{\\subseteq}{{$\subseteq\ $}}1
+		{\\supset}{{$\supset\ $}}1
+		{\\supseteq}{{$\supseteq\ $}}1
+		{\\forall}{{$\forall$}}1
+		{\\le}{{$\le\ $}}1
+		{\\ge}{{$\ge\ $}}1
+		{\\gets}{{$\gets\ $}}1
+		{\\cup}{{$\cup\ $}}1
+		{\\cap}{{$\cap\ $}}1
+		{\\langle}{{$\langle$}}1
+		{\\rangle}{{$\rangle$}}1
+		{\\exists}{{$\exists\ $}}1
+		{\\bot}{{$\bot$}}1
+		{\\rip}{{$\rip$}}1
+		{\\emptyset}{{$\emptyset$}}1
+		{\\notin}{{$\notin\ $}}1
+		{\\not\\exists}{{$\not\exists\ $}}1
+		{\\ne}{{$\ne\ $}}1
+		{\\to}{{$\to\ $}}1
+		{\\implies}{{$\implies\ $}}1
+		% LSL symbols (one-character)
+		{<*>}{{$\langle*\rangle$}}1
+%		{<}{{$<\$}}1
+%		{>}{{$>\$}}1
+		{=}{{$=\ $}}1
+		{~}{{$\neg\ $}}1
+		{|}{{$\mid$}}1
+		{'}{{$^\prime$}}1
+		% LSL symbols (two characters)
+		{\\A}{{$\forall\ $}}1
+		{\\E}{{$\exists\ $}}1
+		{\\/}{{$\vee\,$}}1
+		{\\vee}{{$\vee\,$}}1
+		{/\\}{{$\wedge\,$}}1
+		{\\wedge}{{$\wedge\,$}}1
+		{=>}{{$\Rightarrow\ $}}1
+		{->}{{$\rightarrow\ $}}1
+		{<=}{{$\ \leq\ $}}1
+		{<-}{{$\leftarrow\ $}}1
+		{==}{{$=\mathrel{\mkern-3mu}=\ $}}1
+		%        {<=}{{$\leq$}}1
+		%        {>=}{{$\geq$}}1
+		{_}{{\_}}1
+		{~=}{{$\neq\ $}}1
+		{\\U}{{$\cup\ $}}1
+		{\\I}{{$\cap\ $}}1
+		{|-}{{$\vdash\ $}}1
+		{-|}{{$\dashv\ $}}1
+		{<<}{{$\ll\ $}}2
+		{>>}{{$\gg\ $}}2
+		{||}{{$\|$}}1
+		%%       {\[\]}{{\[\,\]}}2 {\{\}}{{\{\,\}}}2
+		{[[}{{$\langle$}}1
+		{]]}{{$\rangle$}}1
+		{[}{{$[$}}1
+		{]}{{$\,]$}}1
+		%        {[[}{{$\langle$}}1
+		{]]]}{{$]\rangle$}}1
+		%        {]]}{{$\rangle$}}1
+		{<=>}{{$\Leftrightarrow\ $}}2
+		{<->}{{$\leftrightarrow\ $}}2
+		{(+)}{{$\oplus\ $}}1
+		{(-)}{{$\ominus\ $}}1
+		{_i}{{$_{i}$}}1
+		{_j}{{$_{j}$}}1
+		{_{i,j}}{{$_{i,j}$}}3
+		{_{j,i}}{{$_{j,i}$}}3
+		{_0}{{$_0$}}1
+		{_1}{{$_1$}}1
+		{_2}{{$_2$}}1
+		{_n}{{$_n$}}1
+		{_p}{{$_p$}}1
+		{_k}{{$_n$}}1
+		%        {-}{{$\ms{-}$}}1
+		{@}{{}}0
+		{\\delta}{{$\delta$}}1
+		{\\R}{{$\R$}}1
+		{\\Rplus}{{$\Rplus$}}1
+		{\\N}{{$\N$}}1
+		{\\times}{{$\times\ $}}1
+		{\\tau}{{$\tau$}}1
+		{\\alpha}{{$\alpha$}}1
+		{\\beta}{{$\beta$}}1
+		{\\gamma}{{$\gamma$}}1
+		{\\ell}{{$\ell\ $}}1
+		{--}{{$-\ $}}1
+		{\\TT}{{\hspace{1.5em}}}3
+	}
+
+	\lstdefinestyle{tight}
+    {
+        framesep=0pt,
+        numbersep=15pt,
+        numberstyle=\tiny,
+        stepnumber=1,
+        numbersep=4pt,
+    }
+	
+	\lstdefinelanguage{NumKoord}[]{Koord}
+	{
+        style=tight,
+		numbers=left,
+	}
+	
+	\lstdefinelanguage{KoordNum}[]{Koord}
+	{
+        style=tight,
+		numbers=right,
+	}
+
+
+% numbers sets
+
+\newcommand{\nnt}{{\sf T}^{\geq 0}}             %nonnegative time points
+\newcommand{\post}{{\sf T}^{>0}}                %positive time points
+\newcommand{\Variables}{{\sf V}}                %variables
+
+\newcommand{\num}[1]{\relax\ifmmode \mathbb #1\else $\mathbb #1$\fi}
+\newcommand{\nnnum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{\geq 0} \else ${\mathbb #1}_{\geq 0}$
+	\fi}
+\newcommand{\npnum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{\leq 0} \else ${\mathbb #1}_{\leq 0}$
+	\fi}
+\newcommand{\pnum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{> 0} \else ${\mathbb #1}_{> 0}$
+	\fi}
+\newcommand{\nnum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{< 0} \else ${\mathbb #1}_{< 0}$
+	\fi}
+\newcommand{\plnum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{+} \else ${\mathbb #1}_{+}$
+	\fi}
+\newcommand{\nenum}[1]{\relax\ifmmode 
+	{\mathbb #1}_{-} \else ${\mathbb #1}_{-}$
+	\fi}
+\newcommand{\K}{\ensuremath{\mathbb{K}}\xspace}
+\newcommand{\reals}{{\num R}}                    %reals
+\newcommand{\booleans}{{\num B}}                    %reals
+\newcommand{\nnreals}{{\nnnum R}}                    %nonnegative reals
+\newcommand{\realsinfty}{{\num R} \cup \{\infty, -\infty\}}                    %nonnegative reals
+\newcommand{\plreals}{{\plnum R}}                    %positive reals
+\newcommand{\naturals}{{\num N}}                      %natural numbers
+\newcommand{\integers}{{\num Z}}                      %integers
+\newcommand{\rationals}{{\num Q}}                      %rationals
+\newcommand{\nnrationals}{{\nnnum Q}}                   % nonnegative rationals
+\newcommand{\Time}{{\num T}}  
+
+
+
+%% Sasa, commenting commands:
+
+\definecolor{WowColor}{rgb}{.75,0,.75}
+\definecolor{SubtleColor}{rgb}{0,0,.50}
+\definecolor{TODOColor}{rgb}{0,.50,0}
+
+% inline
+\newcommand{\NA}[1]{\textcolor{SubtleColor}{ {\tiny \bf ($\star$)} #1}}
+\newcommand{\TODO}[1]{\textcolor{TODOColor}{ {\tiny \bf TODO:} #1}}
+\newcommand{\LATER}[1]{\textcolor{SubtleColor}{ {\tiny \bf ($\dagger$)} #1}}
+\newcommand{\TBD}[1]{\textcolor{SubtleColor}{ {\tiny \bf (!)} #1}}
+\newcommand{\PROBLEM}[1]{\textcolor{WowColor}{ {\bf (!!)} {\bf #1}}}
+\newcommand{\ST}[1]{ \textcolor{SubtleColor}{ {\tiny \bf (!!)} \sout{#1} } }
+
+\newcommand{\fTBD}[1]{\textcolor{SubtleColor}{$\,^{(\incdisplaycounter)}$}\marginpar{\tiny\textcolor{SubtleColor}{ {\tiny $(\displaycounter)$} #1}}}
+\newcommand{\fTODO}[1]{\textcolor{TODOColor}{$\,^{(\incdisplaycounter)}$}\marginpar{\tiny\textcolor{TODOColor}{ {\tiny TODO $(\displaycounter)$}:  #1}}}
+\newcommand{\fPROBLEM}[1]{\textcolor{WowColor}{$\,^{((\incdisplaycounter))}$}\marginpar{\tiny\textcolor{WowColor}{ {\bf $\mathbf{((\displaycounter))}$} {\bf #1}}}}
+\newcommand{\fLATER}[1]{\textcolor{SubtleColor}{$\,^{(\incdisplaycounter\dagger)}$}\marginpar{\tiny\textcolor{SubtleColor}{ {\tiny $(\displaycounter\dagger)$} #1}}}
+
+%semantic macros
+\newcommand{\pid}{\mathit{pid}}
+\newcommand{\en}{\mathit{en}}
+\newcommand{\ur}{\mathit{ur}}
+\newcommand{\cp}{\mathit{cp}}
+\newcommand{\turn}{\mathit{turn}}
+\newcommand{\gconfig}{\mathit{\boldsymbol{c}}} %global config
+\newcommand{\gset}{\mathcal{C}} %set of global configs
+\newcommand{\agnt}{L}
+\newcommand{\lconfig}[1]{\agnt_{#1}} %configuration of agent i
+\newcommand{\lset}{\{\lconfig{i}\}} %set of agent configurations
+\newcommand{\eec}[2]{\llbracket#1\rrbracket_{#2}}
+\newcommand{\EvalExpr}[1]{\eec{#1}{S, \agnt}}
+
+\newcommand{\pwg}{\mathbb{C}} %all possible global configs, (power set of)
+\newcommand{\pwl}{\mathbb{L}} %all possible local configs
+\newcommand{\pwe}{\mathbb{E}} %all possible expressions.
+\newcommand{\pws}{\mathbb{S}} %all possible global context
+\newcommand{\pwstmt}{\mathit{Stmt}} %all possible statements
+\newcommand{\Task}{\textsf{Task}\xspace}
+\newcommand{\Gazebo}{Gazebo\xspace}
+
+% as margin notes
+\newcounter{margincounter}
+\newcommand{\displaycounter}{{\arabic{margincounter}}}
+\newcommand{\incdisplaycounter}{{\stepcounter{margincounter}\arabic{margincounter}}}
+\newcommand{\env}{\mathtt{env}}
+\newcommand{\prog}{\mathtt{prog}}
+
+\newcommand{\mytitle}{Working Title}
+\newcommand{\qfunc}{\mathit{quant}}
+\newcommand{\qinv}{\mathit{quant}^{-1}}
+\newcommand{\qdom}{\mathit{Q}}
+\newcommand{\map}{\mathit{map}}
+\newcommand{\world}{\mathit{world}}
+\newcommand{\pos}{\mathit{pos}}
+\newcommand{\mapprob}{\mathit{Map2D}}
+\newcommand{\sensarea}{\mathit{sa}}
+\newcommand{\lmap}{\mathit{localMap}}
+\newcommand{\gmap}{\mathit{map}}
+\newcommand{\ff}{\mathit{frontier}}
+\newcommand{\qdfunc}{quantized domain function}
+\newcommand{\sensfunc}{\mathit{scanToMap}}
+\newcommand{\rmap}{\mathit{ws}}
+\newcommand{\Access}{\mathit{access}}
+\newcommand{\ps}{\mathit{ps}}
+\newcommand{\pre}{\mathit{pre}}
+\newcommand{\pvec}{\vec{p}}
+\newcommand{\pseq}{(p_i)}
+\newcommand{\pinit}{p_0}
+\newcommand{\incurly}[1]{\left\{#1\right\}}
+\newcommand{\pathvar}{\mathit{shared\_path}}
+\newcommand{\evname}[1]{\emph{#1}}
+\newenvironment{noinditem}
+{ \begin{asparaitem}
+  \setlength{\itemsep}{0.5ex}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \addtolength{\itemindent}{-2em}  }
+{ \end{asparaitem} }
+
+\newenvironment{noindenum}
+{ \begin{asparaenum}
+  \setlength{\itemsep}{0.5ex}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+  \addtolength{\itemindent}{-2em}  }
+{ \end{asparaenum} }

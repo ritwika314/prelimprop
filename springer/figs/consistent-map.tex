@@ -1,0 +1,98 @@
+\begin{tikzpicture}[grid map]
+
+% Globally unknown area
+\filldraw[lightgray]
+(-5, 0) rectangle ++ (4, 5)
+(1, -5) rectangle ++ (4, 3)
+(-1, 3) rectangle ++ (6, 2)
+;
+
+\begin{scope}
+    \draw[step=1, gray, very thin] (-5.2,-5.2) grid (5.5,5.5);
+    \draw[thick,->] (-6,-5) -- (6,-5) node (x axis) [right] {$x$};
+    \draw[thick,->] (-5,-6) -- (-5,6) node (y axis) [above] {$y$};
+    \fill[gray, pattern=dots] % quantize obs1
+    (0,0)
+    -- (0,1)
+    -- (1,1)
+    -- (1,2)
+    -- (0,2)
+    -- (0, 3)
+    -- (-1,3)
+    -- (-1,4)
+    -- (-3,4)
+    -- (-3,3)
+    -- (-5,3)
+    -- (-5,-1)
+    -- (-2,-1)
+    -- (-2,-2)
+    -- (-1,-2)
+    -- (-1,-1)
+    -- (0, -1)
+    -- cycle;
+
+    \fill[gray, pattern=dots] % quantize obs2
+    (1,-1)
+    -- (1,-2)
+    -- (0,-2)
+    -- (0,-4)
+    -- (1,-4)
+    -- (1,-5)
+    -- (4,-5)
+    -- (4,-1)
+    -- cycle;
+\end{scope}
+
+
+% robot 1
+\draw[thick] (-5, -5) rectangle ++ (6, 5);
+\node[fill=white, draw, rectangle] at (-2, -2.5) {bot1};
+\fill[gray, pattern=north west lines] % detected obs
+    (-2,-2)
+ -- (-1,-2)
+ -- (-1,-1)
+ -- ( 0,-1)
+ -- ( 0, 0)
+ -- (-5, 0)
+ -- (-5,-1)
+ -- (-2,-1)
+ -- cycle
+ 
+    ( 0,-4)
+ -- ( 1,-4)
+ -- ( 1,-2)
+ -- ( 0,-2)
+ -- cycle
+;
+
+% robot 2
+\draw[thick] (-1, -2) rectangle ++ (6, 5);
+\node[fill=white, draw, rectangle] at (2, 0.5) {bot2};
+\fill[gray, pattern=north east lines] % detected obs
+   (-1,-1)
+-- ( 0,-1)
+-- ( 0, 1)
+-- ( 1, 1)
+-- ( 1, 2)
+-- ( 0, 2)
+-- ( 0, 3)
+-- (-1, 3)
+-- cycle
+
+   ( 1,-2)
+-- ( 4,-2)
+-- ( 4,-1)
+-- ( 1,-1)
+-- cycle
+;
+
+\fill[gray, pattern=north east lines] (0,-1) rectangle ++ (1, 1); % unsound and inconsistent
+\draw[densely dotted]
+    (-0.5, -0.5) -- (-0.8, -5.5) node {\grid{-0.5}{-0.5} is consistent}
+;
+\draw[densely dotted]
+    (0.5, -0.5) -- (0.8, 6) node [above] {\grid{0.5}{-0.5} of bot2 is unsound and inconsistent}
+;
+
+
+\end{tikzpicture}

@@ -1,0 +1,14 @@
+\section{Remaining Goals and enhancements}
+\paragraph{Runtime monitoring and end-to-end verification}
+
+ 
+\paragraph{Partitioning into programmable multi-robot sub-systems}
+CyPhyHouse provides distributed coordination across robots, wherein each robot is a node that performs individual computations potentially as part of a distributed task. Each robot also has individual sensing and actuation to determine its interaction with the environment. One of the new software enhancement goals includes implementation of a \emph{partition} feature. This will allow partitioning of the overall distributed system into sub-components, where each sub-component potentially consists of multiple robots seen as a single unit. For instance, lightweight robots without individual computation units communicating with a base computer through ROS messages can be seen as one programmable unit in the overall distributed system. This adds a new level of abstraction to the Koord language itself, and opens up research questions about whether current verification techniques can be extended to these types of distributed systems, where each node may itself be a multi-robot system.
+
+While an implementation is already possible with the currently existing CyPhyHouse middleware; the formal syntax and semantics for this language abstraction, and application of the verification approach through separation of platform dependent and independent components remains to be concretized. 
+
+\paragraph{Multi-application heterogeneous systems}
+As another facet of the previous goal, I plan to explore  the extension of the verification methodology to a a distributed system of robots running multiple applications , which communicate through shared variables \emph{across applications} as well. For instance, the task and the mapping application can be combined to create an application in which robots perform a set of tasks in an unmapped grid. Preliminary proofs indicate that for this particular example it is a straightforward extension of the existing approach, and if realized, a user will be able to build complex applications incrementally, while ensuring the correctness of the application. 
+
+
+

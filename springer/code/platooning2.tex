@@ -1,0 +1,41 @@
+Platoon
+using Motion 
+    sensors pos psn
+    actuators float xacc
+       
+allread:
+   pos x = Motion.psn
+
+local:
+   float safedist = 5.0
+   float dist 
+   int j = 0 $$
+   int mode = 0
+
+SetAcc:
+  pre True
+  eff
+     if (pid == \NMAX - 1) :
+        if (mode == 0):
+            if j $\geq$ 100:
+                 mode = 1
+        else:
+            if (j $\leq$ 0):
+                mode = 0
+                
+        if (mode == 0):
+            Motion.xacc = 2.0
+            j = j + 1
+          
+        if (mode == 1):
+            Motion.xacc = -2.0
+            j = j - 1
+     else:
+        dist = pos[pid + 1].x - pos[pid].x
+        if (dist >= safedist):
+            Motion.xacc = 1.0
+        else:
+            Motion.xacc = -1.0
+    x[pid] = Motion.psn
+
+

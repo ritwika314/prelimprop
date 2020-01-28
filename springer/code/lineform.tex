@@ -1,0 +1,13 @@
+using Motion:
+  sensors: Point position
+  actuators: Point target
+
+allread: Point x[$\NMAX$] $\label{lineform-allread}$
+init:
+  x[$\myuin$] = Motion.position
+
+TargetUpdate:
+  pre: !($\myuin$ == $\NMAX$ - 1 or $\myuin$ == 0)
+  eff:
+       Motion.target = (x[$\myuin$+1] + x[$\myuin$-1]) / 2
+       x[$\myuin$] = Motion.position

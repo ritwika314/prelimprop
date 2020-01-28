@@ -1,0 +1,41 @@
+using Motion:
+  actuators:
+    List<Point> path
+  sensors:
+    Point position
+    bool reached
+    PathPlanner planner
+local:
+  bool on_task = s
+  List<Point> currPath
+  Task cur_task
+
+allread:
+  List<Point> sharedPaths[$\NMAX$]
+allwrite:
+  List<Task> allTasks
+
+Complete:
+pre: on_task and Motion.reached
+eff: on_task=False
+sharedPaths[pid]=[Motion.position]
+
+Assign:
+  pre: !on_task
+  eff:
+     if len(allTasks) == 0:
+        stop
+     else: atomic:
+        for t in allTasks:
+           currPath=Motion.planner(t.target)
+           if pathIsClear(sharedPaths, \
+                             currPath, pid):
+              on_task=True
+              cur_task=t
+              break
+        if on_task:
+           allTasks.remove(cur_task)
+           sharedPaths[pid]=currPath
+           Motion.path=currPath
+        else:
+           sharedPaths[pid]=[Motion.position]

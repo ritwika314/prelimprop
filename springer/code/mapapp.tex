@@ -1,0 +1,45 @@
+using MotionWithScan $\label{moddef}$
+    sensors:
+        Point position
+        List<Point, Scan> pscan
+        bool reached
+        PathPlanner planner
+    actuators:
+        List<Point> path
+
+allwrite:$\label{awvar}$
+    GridMap map
+
+#$\mathit{omitting\ initialization}$
+local:
+   GridMap localMap
+   Point target
+   bool onPath = True
+   List<Grid> obstacles
+
+GUpdate: $\label{gup}$
+  pre MotionWithScan.reached
+  eff: atomic:
+    map = merge(map, localMap)
+    onPath = False
+
+NewTarget:$\label{newpt}$
+  pre !onPath
+  eff:
+     target = pickFrontierPos(map, \
+                         MotionWithScan.position)
+     obstacles = findObs(map)
+     MotionWithScan.path = \
+        MotionWithScan.planner(target, obstacles)
+     if MotionWithScan.path != []:
+        onPath = True
+     else:
+        onPath = False
+     localMap = map
+
+LUpdate:$\label{lup}$
+   pre onPath and !MotionWithScan.reached
+   eff:
+      for p, s in MotionWithScan.pscan:
+         localMap $=$ merge(localMap, \
+                             scanToMap(p, s))
